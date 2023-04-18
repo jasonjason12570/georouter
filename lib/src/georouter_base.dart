@@ -41,12 +41,12 @@ class GeoRouter extends _GeoRouterService {
 abstract class _GeoRouterService {
   static const String _baseUrl = 'router.project-osrm.org';
   static const String _path = '/route/v1';
+  static const String _options = 'overview=full&annotations=true';
 
-  Future<List<PolylinePoint>> _getDirections(
-      List<PolylinePoint> coordinates) async {
+  Future<List<PolylinePoint>> _getDirections(List<PolylinePoint> coordinates) async {
     final String coordinatesString = _getCoordinatesString(coordinates);
     final Uri url =
-        Uri.https(_baseUrl, '$_path/${_getTravelMode()}/$coordinatesString');
+        Uri.https(_baseUrl, '$_path/${_getTravelMode()}/$coordinatesString/$_options');
 
     try {
       final http.Response response = await http.get(url);
@@ -68,9 +68,8 @@ abstract class _GeoRouterService {
   String _getTravelMode();
 
   static String _getCoordinatesString(List<PolylinePoint> coordinates) {
-    final List<String> coords = coordinates
-        .map((point) => '${point.longitude},${point.latitude}')
-        .toList();
+    final List<String> coords =
+        coordinates.map((point) => '${point.longitude},${point.latitude}').toList();
     return coords.join(';');
   }
 
@@ -101,8 +100,7 @@ abstract class _GeoRouterService {
       final int dlng = ((result & 1) != 0 ? ~(result >> 1) : (result >> 1));
       lng += dlng;
 
-      final PolylinePoint point =
-          PolylinePoint(latitude: lat / 1E5, longitude: lng / 1E5);
+      final PolylinePoint point = PolylinePoint(latitude: lat / 1E5, longitude: lng / 1E5);
       points.add(point);
     }
 

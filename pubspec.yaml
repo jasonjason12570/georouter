@@ -8,7 +8,7 @@ repository: https://github.com/ahmedsaleh210/georouter
 license: MIT
 
 environment:
-  sdk: '>=2.19.2 <3.0.0'
+  sdk: ">=2.17.6 <3.0.0"
   flutter: ">=1.17.0"
 
 dependencies:
