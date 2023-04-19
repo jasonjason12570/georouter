@@ -81,10 +81,9 @@ abstract class _GeoRouterService {
           } else {
             throw HttpException(response.statusCode);
           }
-        } on FormatException catch (e) {
-          throw FormatException(e.message);
         } catch (e) {
-          throw GeoRouterException('Failed to fetch directions: $e');
+          print('e = $e');
+          return [];
         }
       case RouteKernal.valhalla:
         final String coordinatesString = _getCoordinatesStringValhala(coordinates);
@@ -100,23 +99,18 @@ abstract class _GeoRouterService {
           }),
         });
         print('url = ${url.toString()}');
-        try {
-          final http.Response response = await http.get(url);
+        print('url2 = ${url.toString()}');
+        final http.Response response = await http.get(url);
 
-          if (response.statusCode == 200) {
-            print('response.body = ${response.body}');
-            final geometry = jsonDecode(response.body)['trip'][0]['legs'][0]['shape'];
-            print('geometry = ${geometry}');
-            final List<PolylinePoint> polylines = _decodePolyline(geometry);
-            return polylines;
-          } else {
-            print('response.statusCode = ${response.statusCode}');
-            throw HttpException(response.statusCode);
-          }
-        } on FormatException catch (e) {
-          throw FormatException(e.message);
-        } catch (e) {
-          throw GeoRouterException('Failed to fetch directions: $e');
+        if (response.statusCode == 200) {
+          print('response.body = ${response.body}');
+          final geometry = jsonDecode(response.body)['trip'][0]['legs'][0]['shape'];
+          print('geometry = ${geometry}');
+          final List<PolylinePoint> polylines = _decodePolyline(geometry);
+          return polylines;
+        } else {
+          print('response.statusCode = ${response.statusCode}');
+          throw HttpException(response.statusCode);
         }
       case RouteKernal.customize:
         final String coordinatesString = _getCoordinatesString(coordinates);
