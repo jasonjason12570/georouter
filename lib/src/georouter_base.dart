@@ -61,13 +61,6 @@ abstract class _GeoRouterService {
   static const String _path = '/route/v1';
   static const String _options = 'overview=full&annotations=true';
 
-  //Valhala
-  static const String _baseUrl_valhala = 'valhalla1.openstreetmap.de';
-  static const String _path_valhala = '/route?json=';
-  static const String _location_valhala = '"locations":[';
-  static const String _location_end_valhala = ']';
-  static const String _options_valhala = '"costing":"bicycle"';
-
   Future<List<PolylinePoint>> _getDirections(
     RouteKernal kernal,
     List<PolylinePoint> coordinates,
@@ -111,10 +104,13 @@ abstract class _GeoRouterService {
           final http.Response response = await http.get(url);
 
           if (response.statusCode == 200) {
+            print('response.body = ${response.body}');
             final geometry = jsonDecode(response.body)['trip'][0]['legs'][0]['shape'];
+            print('geometry = ${geometry}');
             final List<PolylinePoint> polylines = _decodePolyline(geometry);
             return polylines;
           } else {
+            print('response.statusCode = ${response.statusCode}');
             throw HttpException(response.statusCode);
           }
         } on FormatException catch (e) {
