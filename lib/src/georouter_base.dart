@@ -95,8 +95,17 @@ abstract class _GeoRouterService {
         }
       case RouteKernal.valhalla:
         final String coordinatesString = _getCoordinatesStringValhala(coordinates);
-        final Uri url = Uri.https(_baseUrl_valhala,
-            '$_path_valhala{$_location_valhala$coordinatesString$_location_end_valhala,$_options_valhala}');
+        final Uri url = Uri.https('valhalla1.openstreetmap.de', '/route', {
+          'json': jsonEncode({
+            'locations': [
+              {'lat': coordinates[0].latitude, 'lon': coordinates[0].longitude},
+              {'lat': coordinates[1].latitude, 'lon': coordinates[1].longitude}
+            ],
+            'costing': 'bicycle',
+            'directions_options': {'units': 'kilometers'},
+            'exclude': ['motorway', 'toll']
+          }),
+        });
         print('url = $url');
         try {
           final http.Response response = await http.get(url);
