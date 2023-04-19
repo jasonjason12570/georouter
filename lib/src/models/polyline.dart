@@ -28,6 +28,7 @@ class Polyline {
   Polyline.Decode({required this.encodedString, required this.precision}) {
     decodedCoords = _decode(encodedString, precision);
     encodedString = encodedString;
+    print('decodedCoords = $decodedCoords');
   }
 
   /// .Encode(coords, p)

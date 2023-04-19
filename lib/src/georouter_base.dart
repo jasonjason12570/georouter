@@ -108,9 +108,11 @@ abstract class _GeoRouterService {
           print('response.body = ${response.body}');
           final geometry = jsonDecode(response.body)['trip']['legs'][0]['shape'];
           print('geometry = ${geometry}');
-
-          polyline = Polyline.Decode(encodedString: geometry, precision: 6);
-
+          try {
+            polyline = Polyline.Decode(encodedString: geometry, precision: 6);
+          } catch (e) {
+            print('e: $e');
+          }
           print('polyline decodedCoords: ${polyline.decodedCoords}');
           print('polyline encodedString: ${polyline.encodedString}');
           //final List<List<double>> polylines = _decodePolyline(geometry);
