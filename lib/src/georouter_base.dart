@@ -6,15 +6,18 @@ import 'models/point.dart';
 
 enum TravelMode { driving, walking, cycling, transit }
 
+enum RouteKernal { osrm, valhalla, customize }
+
 class GeoRouter extends _GeoRouterService {
   final TravelMode mode;
+  final RouteKernal kernal;
 
-  GeoRouter({required this.mode});
+  GeoRouter({required this.mode, required this.kernal});
 
   Future<List<PolylinePoint>> getDirectionsBetweenPoints(
       List<PolylinePoint> coordinates) async {
     try {
-      final polyLines = await _getDirections(coordinates);
+      final polyLines = await _getDirections(kernal, coordinates);
       return polyLines;
     } catch (e) {
       rethrow;
@@ -36,32 +39,120 @@ class GeoRouter extends _GeoRouterService {
         return 'driving';
     }
   }
+
+  @override
+  String _getRouteKernal() {
+    switch (kernal) {
+      case RouteKernal.osrm:
+        return 'driving';
+      case RouteKernal.valhalla:
+        return 'walking';
+      case RouteKernal.customize:
+        return 'cycling';
+      default:
+        return 'driving';
+    }
+  }
 }
 
 abstract class _GeoRouterService {
+  // OSRM
   static const String _baseUrl = 'router.project-osrm.org';
   static const String _path = '/route/v1';
   static const String _options = 'overview=full&annotations=true';
 
-  Future<List<PolylinePoint>> _getDirections(List<PolylinePoint> coordinates) async {
-    final String coordinatesString = _getCoordinatesString(coordinates);
-    final Uri url =
-        Uri.https(_baseUrl, '$_path/${_getTravelMode()}/$coordinatesString?$_options');
-    print('url = $url');
-    try {
-      final http.Response response = await http.get(url);
+  //Valhala
+  static const String _baseUrl_valhala = 'valhalla1.openstreetmap.de';
+  static const String _path_valhala = '/route?json=';
+  static const String _location_valhala = '"locations":[';
+  static const String _location_end_valhala = ']';
+  static const String _options_valhala = '"costing":"bicycle"';
 
-      if (response.statusCode == 200) {
-        final geometry = jsonDecode(response.body)['routes'][0]['geometry'];
-        final List<PolylinePoint> polylines = _decodePolyline(geometry);
-        return polylines;
-      } else {
-        throw HttpException(response.statusCode);
-      }
-    } on FormatException catch (e) {
-      throw FormatException(e.message);
-    } catch (e) {
-      throw GeoRouterException('Failed to fetch directions: $e');
+  Future<List<PolylinePoint>> _getDirections(
+    RouteKernal kernal,
+    List<PolylinePoint> coordinates,
+  ) async {
+    switch (kernal) {
+      case RouteKernal.osrm:
+        final String coordinatesString = _getCoordinatesString(coordinates);
+        final Uri url =
+            Uri.https(_baseUrl, '$_path/${_getTravelMode()}/$coordinatesString?$_options');
+        print('url = $url');
+        try {
+          final http.Response response = await http.get(url);
+
+          if (response.statusCode == 200) {
+            final geometry = jsonDecode(response.body)['routes'][0]['geometry'];
+            final List<PolylinePoint> polylines = _decodePolyline(geometry);
+            return polylines;
+          } else {
+            throw HttpException(response.statusCode);
+          }
+        } on FormatException catch (e) {
+          throw FormatException(e.message);
+        } catch (e) {
+          throw GeoRouterException('Failed to fetch directions: $e');
+        }
+      case RouteKernal.valhalla:
+        final String coordinatesString = _getCoordinatesStringValhala(coordinates);
+        final Uri url = Uri.https(_baseUrl_valhala,
+            '$_path_valhala{$_location_valhala$coordinatesString$_location_end_valhala,$_options_valhala}');
+        print('url = $url');
+        try {
+          final http.Response response = await http.get(url);
+
+          if (response.statusCode == 200) {
+            final geometry = jsonDecode(response.body)['trip'][0]['legs'][0]['shape'];
+            final List<PolylinePoint> polylines = _decodePolyline(geometry);
+            return polylines;
+          } else {
+            throw HttpException(response.statusCode);
+          }
+        } on FormatException catch (e) {
+          throw FormatException(e.message);
+        } catch (e) {
+          throw GeoRouterException('Failed to fetch directions: $e');
+        }
+      case RouteKernal.customize:
+        final String coordinatesString = _getCoordinatesString(coordinates);
+        final Uri url =
+            Uri.https(_baseUrl, '$_path/${_getTravelMode()}/$coordinatesString?$_options');
+        print('url = $url');
+        try {
+          final http.Response response = await http.get(url);
+
+          if (response.statusCode == 200) {
+            final geometry = jsonDecode(response.body)['routes'][0]['geometry'];
+            final List<PolylinePoint> polylines = _decodePolyline(geometry);
+            return polylines;
+          } else {
+            throw HttpException(response.statusCode);
+          }
+        } on FormatException catch (e) {
+          throw FormatException(e.message);
+        } catch (e) {
+          throw GeoRouterException('Failed to fetch directions: $e');
+        }
+      default:
+        final String coordinatesString = _getCoordinatesString(coordinates);
+        final Uri url =
+            Uri.https(_baseUrl, '$_path/${_getTravelMode()}/$coordinatesString?$_options');
+        print('url = $url');
+        try {
+          final http.Response response = await http.get(url);
+
+          if (response.statusCode == 200) {
+            final geometry = jsonDecode(response.body)['routes'][0]['geometry'];
+            final List<PolylinePoint> polylines = _decodePolyline(geometry);
+            return polylines;
+          } else {
+            throw HttpException(response.statusCode);
+          }
+        } on FormatException catch (e) {
+          throw FormatException(e.message);
+        } catch (e) {
+          throw GeoRouterException('Failed to fetch directions: $e');
+        }
     }
   }
 
@@ -71,6 +162,13 @@ abstract class _GeoRouterService {
     final List<String> coords =
         coordinates.map((point) => '${point.longitude},${point.latitude}').toList();
     return coords.join(';');
+  }
+
+  String _getCoordinatesStringValhala(List coordinates) {
+    final List<String> coords = coordinates
+        .map((point) => '{"lat":${point.longitude},"lon":${point.latitude}}')
+        .toList();
+    return coords.join(',');
   }
 
   static List<PolylinePoint> _decodePolyline(String encoded) {
