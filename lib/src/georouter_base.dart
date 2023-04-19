@@ -95,7 +95,7 @@ abstract class _GeoRouterService {
         }
       case RouteKernal.valhalla:
         final String coordinatesString = _getCoordinatesStringValhala(coordinates);
-        final Uri url = Uri.https('valhalla1.openstreetmap.de', '/route', {
+        final Uri url = Uri.https('valhalla1.openstreetmap.de', '/route?', {
           'json': jsonEncode({
             'locations': [
               {'lat': coordinates[0].latitude, 'lon': coordinates[0].longitude},
@@ -106,7 +106,7 @@ abstract class _GeoRouterService {
             'exclude': ['motorway', 'toll']
           }),
         });
-        print('url = $url');
+        print('url = ${url.toString()}');
         try {
           final http.Response response = await http.get(url);
 
