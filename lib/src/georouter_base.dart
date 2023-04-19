@@ -3,7 +3,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'models/exceptions.dart';
 import 'models/point.dart';
-import 'package:polyline/polyline.dart';
+import 'models/polyline.dart';
 
 enum TravelMode { driving, walking, cycling, transit }
 
