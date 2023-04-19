@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'models/exceptions.dart';
 import 'models/point.dart';
+import 'package:polyline/polyline.dart';
 
 enum TravelMode { driving, walking, cycling, transit }
 
@@ -14,7 +15,7 @@ class GeoRouter extends _GeoRouterService {
 
   GeoRouter({required this.mode, required this.kernal});
 
-  Future<List<PolylinePoint>> getDirectionsBetweenPoints(
+  Future<List<List<double>>> getDirectionsBetweenPoints(
       List<PolylinePoint> coordinates) async {
     try {
       final polyLines = await _getDirections(kernal, coordinates);
@@ -60,8 +61,9 @@ abstract class _GeoRouterService {
   static const String _baseUrl = 'router.project-osrm.org';
   static const String _path = '/route/v1';
   static const String _options = 'overview=full&annotations=true';
+  late Polyline polyline;
 
-  Future<List<PolylinePoint>> _getDirections(
+  Future<List<List<double>>> _getDirections(
     RouteKernal kernal,
     List<PolylinePoint> coordinates,
   ) async {
@@ -76,7 +78,7 @@ abstract class _GeoRouterService {
 
           if (response.statusCode == 200) {
             final geometry = jsonDecode(response.body)['routes'][0]['geometry'];
-            final List<PolylinePoint> polylines = _decodePolyline(geometry);
+            final List<List<double>> polylines = _decodePolyline(geometry);
             return polylines;
           } else {
             throw HttpException(response.statusCode);
@@ -106,8 +108,13 @@ abstract class _GeoRouterService {
           print('response.body = ${response.body}');
           final geometry = jsonDecode(response.body)['trip']['legs'][0]['shape'];
           print('geometry = ${geometry}');
-          final List<PolylinePoint> polylines = _decodePolyline(geometry);
-          return polylines;
+
+          polyline = Polyline.Encode(decodedCoords: geometry, precision: 6);
+
+          print('polyline decodedCoords: ${polyline.decodedCoords}');
+          print('polyline encodedString: ${polyline.encodedString}');
+          //final List<List<double>> polylines = _decodePolyline(geometry);
+          return polyline.decodedCoords;
         } else {
           print('response.statusCode = ${response.statusCode}');
           throw HttpException(response.statusCode);
@@ -122,7 +129,7 @@ abstract class _GeoRouterService {
 
           if (response.statusCode == 200) {
             final geometry = jsonDecode(response.body)['routes'][0]['geometry'];
-            final List<PolylinePoint> polylines = _decodePolyline(geometry);
+            final List<List<double>> polylines = _decodePolyline(geometry);
             return polylines;
           } else {
             throw HttpException(response.statusCode);
@@ -142,7 +149,7 @@ abstract class _GeoRouterService {
 
           if (response.statusCode == 200) {
             final geometry = jsonDecode(response.body)['routes'][0]['geometry'];
-            final List<PolylinePoint> polylines = _decodePolyline(geometry);
+            final List<List<double>> polylines = _decodePolyline(geometry);
             return polylines;
           } else {
             throw HttpException(response.statusCode);
@@ -170,8 +177,8 @@ abstract class _GeoRouterService {
     return coords.join(',');
   }
 
-  static List<PolylinePoint> _decodePolyline(String encoded) {
-    final List<PolylinePoint> points = <PolylinePoint>[];
+  static List<List<double>> _decodePolyline(String encoded) {
+    final List<List<double>> points = [];
     int index = 0, len = encoded.length;
     int lat = 0, lng = 0;
 
@@ -197,7 +204,7 @@ abstract class _GeoRouterService {
       final int dlng = ((result & 1) != 0 ? ~(result >> 1) : (result >> 1));
       lng += dlng;
 
-      final PolylinePoint point = PolylinePoint(latitude: lat / 1E5, longitude: lng / 1E5);
+      final List<double> point = [lat / 1E5, lng / 1E5];
       points.add(point);
     }
 

@@ -15,6 +15,7 @@ dependencies:
   flutter:
     sdk: flutter
   http: ^0.13.5
+  polyline: ^1.0.2
 
 dev_dependencies:
   flutter_lints: ^2.0.1
