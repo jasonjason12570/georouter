@@ -47,7 +47,7 @@ abstract class _GeoRouterService {
     final String coordinatesString = _getCoordinatesString(coordinates);
     final Uri url =
         Uri.https(_baseUrl, '$_path/${_getTravelMode()}/$coordinatesString?$_options');
-
+    print('url = $url');
     try {
       final http.Response response = await http.get(url);
 
