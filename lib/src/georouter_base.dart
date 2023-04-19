@@ -46,7 +46,7 @@ abstract class _GeoRouterService {
   Future<List<PolylinePoint>> _getDirections(List<PolylinePoint> coordinates) async {
     final String coordinatesString = _getCoordinatesString(coordinates);
     final Uri url =
-        Uri.https(_baseUrl, '$_path/${_getTravelMode()}/$coordinatesString/$_options');
+        Uri.https(_baseUrl, '$_path/${_getTravelMode()}/$coordinatesString?$_options');
 
     try {
       final http.Response response = await http.get(url);
