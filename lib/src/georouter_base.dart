@@ -104,7 +104,7 @@ abstract class _GeoRouterService {
 
         if (response.statusCode == 200) {
           print('response.body = ${response.body}');
-          final geometry = jsonDecode(response.body)['trip'][0]['legs'][0]['shape'];
+          final geometry = jsonDecode(response.body)['trip']['legs'][0]['shape'];
           print('geometry = ${geometry}');
           final List<PolylinePoint> polylines = _decodePolyline(geometry);
           return polylines;
