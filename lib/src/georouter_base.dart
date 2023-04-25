@@ -7,7 +7,7 @@ import 'models/polyline.dart';
 
 enum TravelMode { driving, walking, cycling, transit }
 
-enum RouteKernal { osrm, valhalla, customize }
+enum RouteKernal { osrm, valhalla, valhalla_200, customize }
 
 class GeoRouter extends _GeoRouterService {
   final TravelMode mode;
@@ -98,6 +98,45 @@ abstract class _GeoRouterService {
             'costing': 'bicycle',
             'directions_options': {'units': 'kilometers'},
             'exclude': ['motorway', 'toll']
+          }),
+        });
+        print('encode url = ${url.toString()}');
+        print('decode url = ${Uri.decodeComponent(url.toString())}');
+        final http.Response response = await http.get(url);
+
+        if (response.statusCode == 200) {
+          print('response.body = ${response.body}');
+          final geometry = jsonDecode(response.body)['trip']['legs'][0]['shape'];
+          print('geometry = ${geometry}');
+          try {
+            polyline = Polyline.Decode(encodedString: geometry, precision: 6);
+          } catch (e) {
+            print('e: $e');
+          }
+          print('polyline decodedCoords: ${polyline.decodedCoords}');
+          print('polyline encodedString: ${polyline.encodedString}');
+          //final List<List<double>> polylines = _decodePolyline(geometry);
+          return polyline.decodedCoords;
+        } else {
+          print('response.statusCode = ${response.statusCode}');
+          throw HttpException(response.statusCode);
+        }
+      case RouteKernal.valhalla_200:
+        final String coordinatesString = _getCoordinatesStringValhala(coordinates);
+        final Uri url = Uri.https('valhalla1.openstreetmap.de', '/route', {
+          'json': jsonEncode({
+            'locations': [
+              {'lat': coordinates[0].latitude, 'lon': coordinates[0].longitude},
+              {'lat': coordinates[1].latitude, 'lon': coordinates[1].longitude}
+            ],
+            'costing': 'motorcycle',
+            "costing_options": {
+              "motorcycle": {
+                "use_highways": 0,
+              } // use_highways = 0 為避免高速公路, "top_speed": 45 速限45為optional預設禁用
+            },
+            'directions_options': {'units': 'kilometers'},
+            'exclude': ['motorway', 'toll'] // 排除高速公路, 排除收費道路
           }),
         });
         print('encode url = ${url.toString()}');
