@@ -15,8 +15,7 @@ class GeoRouter extends _GeoRouterService {
 
   GeoRouter({required this.mode, required this.kernal});
 
-  Future<List<List<double>>> getDirectionsBetweenPoints(
-      List<PolylinePoint> coordinates) async {
+  Future<List> getDirectionsBetweenPoints(List<PolylinePoint> coordinates) async {
     try {
       final polyLines = await _getDirections(kernal, coordinates);
       return polyLines;
@@ -63,10 +62,11 @@ abstract class _GeoRouterService {
   static const String _options = 'overview=full&annotations=true';
   late Polyline polyline;
 
-  Future<List<List<double>>> _getDirections(
+  Future<List> _getDirections(
     RouteKernal kernal,
     List<PolylinePoint> coordinates,
   ) async {
+    double directions_length = 0;
     switch (kernal) {
       case RouteKernal.osrm:
         final String coordinatesString = _getCoordinatesString(coordinates);
@@ -105,6 +105,7 @@ abstract class _GeoRouterService {
         final http.Response response = await http.get(url);
 
         if (response.statusCode == 200) {
+          //get directions
           print('response.body = ${response.body}');
           final geometry = jsonDecode(response.body)['trip']['legs'][0]['shape'];
           print('geometry = ${geometry}');
@@ -116,7 +117,12 @@ abstract class _GeoRouterService {
           print('polyline decodedCoords: ${polyline.decodedCoords}');
           print('polyline encodedString: ${polyline.encodedString}');
           //final List<List<double>> polylines = _decodePolyline(geometry);
-          return polyline.decodedCoords;
+
+          //get distance
+          directions_length = jsonDecode(response.body)['trip']['summary']['length'];
+          print('directions_length = ${directions_length}');
+
+          return [polyline.decodedCoords, directions_length];
         } else {
           print('response.statusCode = ${response.statusCode}');
           throw HttpException(response.statusCode);
@@ -155,7 +161,11 @@ abstract class _GeoRouterService {
           print('polyline decodedCoords: ${polyline.decodedCoords}');
           print('polyline encodedString: ${polyline.encodedString}');
           //final List<List<double>> polylines = _decodePolyline(geometry);
-          return polyline.decodedCoords;
+          //get distance
+          directions_length = jsonDecode(response.body)['trip']['summary']['length'];
+          print('directions_length = ${directions_length}');
+
+          return [polyline.decodedCoords, directions_length];
         } else {
           print('response.statusCode = ${response.statusCode}');
           throw HttpException(response.statusCode);
