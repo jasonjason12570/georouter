@@ -122,7 +122,7 @@ abstract class _GeoRouterService {
           directions_length = jsonDecode(response.body)['trip']['summary']['length'];
           print('directions_length = ${directions_length}');
 
-          return [polyline.decodedCoords, directions_length];
+          return [polyline.decodedCoords, directions_length, response.body];
         } else {
           print('response.statusCode = ${response.statusCode}');
           throw HttpException(response.statusCode);
@@ -165,7 +165,7 @@ abstract class _GeoRouterService {
           directions_length = jsonDecode(response.body)['trip']['summary']['length'];
           print('directions_length = ${directions_length}');
 
-          return [polyline.decodedCoords, directions_length];
+          return [polyline.decodedCoords, directions_length, response.body];
         } else {
           print('response.statusCode = ${response.statusCode}');
           throw HttpException(response.statusCode);
